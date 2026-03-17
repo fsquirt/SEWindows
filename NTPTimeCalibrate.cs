@@ -53,7 +53,7 @@ public class NtpTimeSync
             {
                 // 6. 获取设置成功后的新本地时间并输出
                 Console.WriteLine($"本地新时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
-                Console.WriteLine("系统时间同步成功！");
+                Console.WriteLine("系统时间同步成功");
             }
             else
             {

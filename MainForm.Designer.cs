@@ -38,11 +38,12 @@
             titlelabel.AutoSize = true;
             titlelabel.BackColor = Color.Transparent;
             titlelabel.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
+            titlelabel.ForeColor = Color.FromArgb(255, 128, 128);
             titlelabel.Location = new Point(12, 9);
             titlelabel.Name = "titlelabel";
-            titlelabel.Size = new Size(187, 17);
+            titlelabel.Size = new Size(221, 17);
             titlelabel.TabIndex = 0;
-            titlelabel.Text = "SEWindows正在验证这台计算机";
+            titlelabel.Text = "🎭SEWindows正在验证这台计算机🎭";
             // 
             // LogLabel
             // 
@@ -51,9 +52,9 @@
             LogLabel.ForeColor = Color.FromArgb(128, 255, 128);
             LogLabel.Location = new Point(12, 26);
             LogLabel.Name = "LogLabel";
-            LogLabel.Size = new Size(43, 17);
+            LogLabel.Size = new Size(80, 17);
             LogLabel.TabIndex = 1;
-            LogLabel.Text = "label1";
+            LogLabel.Text = "等待日志传入\r\n";
             // 
             // MainForm
             // 

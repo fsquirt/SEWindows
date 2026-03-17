@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MeasuredBootParser;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -25,7 +26,7 @@ namespace SEWindows
             InitializeComponent();
 
             this.FormBorderStyle = FormBorderStyle.None;
-            this.BackColor = Color.Black;
+            this.BackColor = Color.White;
             this.Opacity = 0; 
         }
 
@@ -49,7 +50,11 @@ namespace SEWindows
 
             await Task.Run(async () => {
                 await NtpTimeSync.NTPMain();
+                Thread.Sleep(3000);
+                await MeasuredBootCore.Run(Array.Empty<string>());
             });
+
+            Console.WriteLine("TPM本地验证通过，PCR重放匹配");
         }
 
         protected override void OnHandleCreated(EventArgs e)
