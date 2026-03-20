@@ -10,40 +10,20 @@ using System.Linq;
 
 namespace MeasuredBootParser
 {
-    /// <summary>
-    /// 核心分析入口，负责协调 TCG 日志解析、PCR 回放、安全特性分析全流程。
-    /// Program.cs 只负责 UI 启动，所有分析逻辑在此。
-    /// </summary>
     public static class MeasuredBootCore
     {
-        /// <summary>
-        /// 主分析流程。args 兼容命令行参数：
-        ///   args[0]        - 可选，手动指定 .log 文件路径
-        ///   --pcr=N        - 只显示指定 PCR 的事件
-        /// </summary>
-        public static async Task Run(string[] args)
+        public static async Task Run()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            // ── 1. 解析日志来源 ──────────────────────────────────────────
-            TcgEventLog log;
+            // ── 1. 解析日志来源（仅保留从 TPM 读取） ──────────────────────────
             string? jsonFile = null;
+            TcgEventLog log = TryReadFromTpm(out jsonFile);
 
-            if (args.Length >= 1 && File.Exists(args[0]))
+            if (log == null)
             {
-                string logFile = args[0];
-                Console.WriteLine($"\n[*] Parsing file: {logFile}\n");
-                log = EventLogParser.Parse(logFile);
-
-                string baseName = Path.GetFileNameWithoutExtension(logFile);
-                string logDir = Path.GetDirectoryName(logFile) ?? ".";
-                jsonFile = Path.Combine(logDir, baseName + ".json");
-                if (!File.Exists(jsonFile)) jsonFile = null;
-            }
-            else
-            {
-                log = TryReadFromTpm(out jsonFile);
-                if (log == null) return;
+                Console.WriteLine("[!] 未能从系统中获取 TPM 事件日志。");
+                return;
             }
 
             // ── 2. 摘要输出 ──────────────────────────────────────────────
@@ -59,7 +39,7 @@ namespace MeasuredBootParser
             Console.WriteLine("[*] Replaying PCR values from event log...");
             var replayedBanks = PcrReplayer.Replay(log);
 
-            // ── 4. 读取 TPM 实际 PCR 值 ──────────
+            // ── 4. 读取 TPM 实际 PCR 值 ──────────────────────────────────
             Dictionary<ushort, Dictionary<uint, byte[]>>? tpmBanks = null;
             try
             {
@@ -81,14 +61,9 @@ namespace MeasuredBootParser
             // ── 5. PCR Banks 对比报告 ────────────────────────────────────
             ReportWriter.PrintPcrBanks(log, replayedBanks, tpmBanks);
 
-            // ── 6. 事件列表 ─────────────────────────────────────────────
-            Console.WriteLine("[*] Showing all events (use --pcr=N to filter):");
-            uint? filterPcr = null;
-            foreach (var a in args)
-                if (a.StartsWith("--pcr=") && uint.TryParse(a[6..], out uint p))
-                    filterPcr = p;
-
-            ReportWriter.PrintEvents(log, filterPcr);
+            // ── 6. 事件列表（移除过滤功能，显示全部） ─────────────────────
+            Console.WriteLine("[*] Showing all events:");
+            ReportWriter.PrintEvents(log, null);
 
             // ── 7. WBCL Tagged Events ────────────────────────────────────
             var wbclEvents = WbclParser.ParseAll(log);
@@ -107,7 +82,7 @@ namespace MeasuredBootParser
                 Console.WriteLine();
             }
 
-            // ── 安全特性分析 ──────────────────────────────────────────
+            // ── 8. 安全特性分析 ──────────────────────────────────────────
             var features = SecurityFeatureAnalyzer.Analyze(log);
             ReportWriter.PrintSecurityFeatures(features);
         }

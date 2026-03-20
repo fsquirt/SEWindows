@@ -35,7 +35,7 @@ namespace SEWindows
         private async void MainForm_Load(object sender, EventArgs e)
         {
             var labelWriter = new LabelTextWriter(UpdateLog);
-            //Console.SetOut(labelWriter);
+            Console.SetOut(labelWriter);
 
             this.StartPosition = FormStartPosition.Manual;
             Rectangle workingArea = Screen.PrimaryScreen.WorkingArea;
@@ -54,7 +54,7 @@ namespace SEWindows
                 // 本地验证部分 
                 await NtpTimeSync.NTPMain();
                 Thread.Sleep(1000);
-                await MeasuredBootCore.Run(Array.Empty<string>());
+                await MeasuredBootCore.Run();
                 Thread.Sleep(1000);
                 // 远程验证部分
                 await RemoteAttestation.RunAsync();

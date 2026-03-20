@@ -85,7 +85,6 @@ namespace SEWindows.RemoteVerify
 
             Thread.Sleep(1000);
             // ── 最终结果汇总 ──────────────────────────────────────────────────
-            Console.WriteLine("\n══════ 验证结果汇总 ═════════════════════════════════");
             Console.WriteLine($"  EK 验证      : {(ekResult.Success ? "✔ 通过" : "✘ 失败")}");
             Console.WriteLine($"  AK 验证      : {(akResult.Success ? "✔ 通过" : "✘ 失败")}");
             Console.WriteLine($"  PCR Replay   : {(pcrResult.PcrMatch ? "✔ 一致" : "✘ 不一致")}");

@@ -49,7 +49,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
             BackgroundImageLayout = ImageLayout.Stretch;
-            ClientSize = new Size(534, 313);
+            ClientSize = new Size(443, 243);
             Controls.Add(LogLabel);
             DoubleBuffered = true;
             Name = "MainForm";
