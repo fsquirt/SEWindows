@@ -29,28 +29,15 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            titlelabel = new Label();
             LogLabel = new Label();
             SuspendLayout();
-            // 
-            // titlelabel
-            // 
-            titlelabel.AutoSize = true;
-            titlelabel.BackColor = Color.Transparent;
-            titlelabel.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 134);
-            titlelabel.ForeColor = Color.FromArgb(255, 128, 128);
-            titlelabel.Location = new Point(12, 9);
-            titlelabel.Name = "titlelabel";
-            titlelabel.Size = new Size(221, 17);
-            titlelabel.TabIndex = 0;
-            titlelabel.Text = "🎭SEWindows正在验证这台计算机🎭";
             // 
             // LogLabel
             // 
             LogLabel.AutoSize = true;
             LogLabel.BackColor = Color.Transparent;
-            LogLabel.ForeColor = Color.FromArgb(128, 255, 128);
-            LogLabel.Location = new Point(12, 26);
+            LogLabel.ForeColor = Color.White;
+            LogLabel.Location = new Point(12, 9);
             LogLabel.Name = "LogLabel";
             LogLabel.Size = new Size(80, 17);
             LogLabel.TabIndex = 1;
@@ -62,9 +49,8 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
             BackgroundImageLayout = ImageLayout.Stretch;
-            ClientSize = new Size(421, 244);
+            ClientSize = new Size(534, 313);
             Controls.Add(LogLabel);
-            Controls.Add(titlelabel);
             DoubleBuffered = true;
             Name = "MainForm";
             Text = "SEWindows";
@@ -74,8 +60,6 @@
         }
 
         #endregion
-
-        private Label titlelabel;
         private Label LogLabel;
     }
 }

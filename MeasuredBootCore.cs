@@ -59,7 +59,7 @@ namespace MeasuredBootParser
             Console.WriteLine("[*] Replaying PCR values from event log...");
             var replayedBanks = PcrReplayer.Replay(log);
 
-            // ── 4. 读取 TPM 实际 PCR 值（可选，需要管理员权限） ──────────
+            // ── 4. 读取 TPM 实际 PCR 值 ──────────
             Dictionary<ushort, Dictionary<uint, byte[]>>? tpmBanks = null;
             try
             {
@@ -107,21 +107,12 @@ namespace MeasuredBootParser
                 Console.WriteLine();
             }
 
-            // ── 8. 导出 JSON ─────────────────────────────────────────────
-            string exportName = log.FilePath.StartsWith("<")
-                ? "tbs_tcglog.parsed.json"
-                : Path.GetFileNameWithoutExtension(log.FilePath) + ".parsed.json";
-            string exportPath = Path.Combine(Directory.GetCurrentDirectory(), exportName);
-            ReportWriter.ExportJson(log, replayedBanks, exportPath);
-
-            // ── 9. 安全特性分析 ──────────────────────────────────────────
+            // ── 安全特性分析 ──────────────────────────────────────────
             var features = SecurityFeatureAnalyzer.Analyze(log);
             ReportWriter.PrintSecurityFeatures(features);
-
-            Console.WriteLine("\n[✓] Done.");
         }
 
-        // ── 从 TBS API 或磁盘回退读取日志 ───────────────────────────────
+        // ── 从 TBS API 读取日志 ───────────────────────────────
         private static TcgEventLog? TryReadFromTpm(out string? jsonFile)
         {
             jsonFile = null;
@@ -137,39 +128,7 @@ namespace MeasuredBootParser
             {
                 Console.WriteLine($"[!] TBS API failed: {tbsEx.Message}");
                 Console.WriteLine("[*] Falling back to disk log files...\n");
-            }
 
-            string logDir = @"C:\Windows\Logs\MeasuredBoot";
-            string? logFile = null;
-
-            if (Directory.Exists(logDir))
-            {
-                logFile = Directory.GetFiles(logDir, "*.log")
-                    .OrderByDescending(File.GetLastWriteTime)
-                    .FirstOrDefault();
-
-                if (logFile != null)
-                {
-                    string baseName = Path.GetFileNameWithoutExtension(logFile);
-                    jsonFile = Path.Combine(logDir, baseName + ".json");
-                    if (!File.Exists(jsonFile)) jsonFile = null;
-                }
-            }
-
-            if (logFile == null)
-            {
-                Console.Error.WriteLine("[!] No .log file found. Usage: MeasuredBootParser [path.log]");
-                return null;
-            }
-
-            Console.WriteLine($"[*] Parsing file: {logFile}\n");
-            try
-            {
-                return EventLogParser.Parse(logFile);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[!] Parse failed: {ex.Message}");
                 return null;
             }
         }

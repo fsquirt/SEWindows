@@ -1,10 +1,12 @@
 ﻿using MeasuredBootParser;
+using SEWindows.RemoteVerify;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
 
@@ -19,7 +21,7 @@ namespace SEWindows
         public static extern bool ReleaseCapture();
 
         private List<string> logLines = new List<string>();
-        private const int MaxLogLines = 10;
+        private const int MaxLogLines = 15;
 
         public MainForm()
         {
@@ -49,12 +51,14 @@ namespace SEWindows
             this.Opacity = 1.0;
 
             await Task.Run(async () => {
+                // 本地验证部分 
                 await NtpTimeSync.NTPMain();
-                Thread.Sleep(3000);
+                Thread.Sleep(1000);
                 await MeasuredBootCore.Run(Array.Empty<string>());
+                Thread.Sleep(1000);
+                // 远程验证部分
+                await RemoteAttestation.RunAsync();
             });
-
-            Console.WriteLine("TPM本地验证通过，PCR重放匹配");
         }
 
         protected override void OnHandleCreated(EventArgs e)
