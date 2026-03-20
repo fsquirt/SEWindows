@@ -46,6 +46,8 @@ namespace MeasuredBootParser.Models
             [0x800000E0] = "EV_EFI_VARIABLE_AUTHORITY",
             [0x800000E1] = "EV_EFI_SPDM_FIRMWARE_BLOB",
             [0x800000E2] = "EV_EFI_SPDM_FIRMWARE_CONFIG",
+            [0x800000E3] = "EV_EFI_SPDM_DEVICE_POLICY",
+            [0x800000E4] = "EV_EFI_SPDM_DEVICE_AUTHORITY",
         };
 
         public static string GetName(uint eventType)

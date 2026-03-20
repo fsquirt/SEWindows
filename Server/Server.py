@@ -193,9 +193,16 @@ EV_NO_ACTION    = 0x00000003
 EV_SEPARATOR    = 0x00000004
 EV_EFI_VAR_CFG  = 0x80000001
 EV_EFI_VAR_BOOT = 0x80000002
+EV_EFI_GPT_EVENT = 0x80000006
+EV_EFI_BLOB     = 0x80000008
+EV_EFI_HANDOFF  = 0x80000009
 EV_EFI_BLOB2    = 0x8000000A
-EV_EFI_HANDOFF  = 0x8000000B
+EV_EFI_HANDOFF2 = 0x8000000B
 EV_EFI_VAR_AUTH = 0x800000E0
+EV_EFI_SPDM_FIRMWARE_BLOB = 0x800000E1
+EV_EFI_SPDM_FIRMWARE_CONFIG = 0x800000E2
+EV_EFI_SPDM_DEVICE_POLICY = 0x800000E3
+EV_EFI_SPDM_DEVICE_AUTHORITY = 0x800000E4
 EV_COMPACT_HASH = 0x0000000C
 
 EFI_GLOBAL_GUID = (0x8BE4DF61, 0x93CA, 0x11D2,
@@ -386,6 +393,77 @@ def _blob2_name(raw: bytes) -> str:
     nl = raw[0]
     return raw[1:1 + nl].decode("utf-8", errors="replace").rstrip("\x00") \
         if nl and nl + 1 <= len(raw) else ""
+
+
+def _blob_name(raw: bytes) -> str:
+    """解析 EV_EFI_PLATFORM_FIRMWARE_BLOB (旧版 0x80000008)"""
+    if not raw or len(raw) < 16:
+        return ""
+    try:
+        blob_base = struct.unpack_from("<Q", raw, 0)[0]
+        blob_len = struct.unpack_from("<Q", raw, 8)[0]
+        return f"Base=0x{blob_base:016X} Length=0x{blob_len:016X}"
+    except Exception:
+        return f"len={len(raw)}"
+
+
+def _gpt_info(raw: bytes) -> str:
+    """解析 EV_EFI_GPT_EVENT (0x80000006)"""
+    if len(raw) < 92:
+        return f"len={len(raw)}"
+    try:
+        sig = raw[:8]
+        if sig != b"EFI PART":
+            return f"sig={sig}"
+        # DiskGUID at offset 56
+        disk_guid = raw[56:72]
+        d1 = struct.unpack_from("<I", raw, 56)[0]
+        d2 = struct.unpack_from("<H", raw, 60)[0]
+        d3 = struct.unpack_from("<H", raw, 62)[0]
+        d4 = raw[64:72]
+        guid = (d1, d2, d3, bytes(d4))
+        first_lba = struct.unpack_from("<Q", raw, 72)[0]
+        last_lba = struct.unpack_from("<Q", raw, 80)[0]
+        part_lba = struct.unpack_from("<Q", raw, 88)[0]
+        result = f"DiskGUID={guid} FirstLBA={first_lba} LastLBA={last_lba} PartitionsLBA={part_lba}"
+        if len(raw) >= 104:
+            num_parts = struct.unpack_from("<I", raw, 96)[0]
+            part_size = struct.unpack_from("<I", raw, 100)[0]
+            result += f" NumPartitions={num_parts} PartSize={part_size}"
+        return result
+    except Exception as e:
+        return f"error: {e}"
+
+
+def _spdm_info(raw: bytes) -> str:
+    """解析 EV_EFI_SPDM_* 系列事件"""
+    if len(raw) < 16:
+        return f"len={len(raw)}"
+    try:
+        sig = raw[:16].rstrip(b'\x00')
+        sig_str = sig.decode('utf-8', errors='replace')
+        if sig_str.startswith("SPDM Device Sec"):
+            result = f"Signature=\"{sig_str}\""
+            if len(raw) >= 18:
+                version = struct.unpack_from("<H", raw, 16)[0]
+                result += f" Version={version}"
+            if len(raw) >= 19:
+                auth_state = raw[18]
+                auth_str = {0: "SUCCESS", 1: "NO_AUTH", 2: "NO_BINDING",
+                            3: "FAIL_NO_SIG", 4: "FAIL_INVALID", 0xFF: "NO_SPDM"}.get(auth_state, f"0x{auth_state:02X}")
+                result += f" AuthState={auth_str}"
+            if len(raw) >= 24:
+                total_len = struct.unpack_from("<I", raw, 20)[0]
+                result += f" TotalLength={total_len}"
+            if len(raw) >= 28:
+                device_type = struct.unpack_from("<I", raw, 24)[0]
+                dev_str = {0: "NULL", 1: "PCI", 2: "USB"}.get(device_type, f"UNKNOWN({device_type})")
+                result += f" DeviceType={dev_str}"
+            return result
+        else:
+            return f"Signature=0x{raw[:16].hex()}"
+    except Exception as e:
+        return f"error: {e}"
 
 
 def _find_efi_var(events: list[_EvRec], pcr=None,
